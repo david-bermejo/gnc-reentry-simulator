@@ -1,2 +1,4 @@
 **/*.slxc
 **/*.asv
+**/*.mexw64
+slprj

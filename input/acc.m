@@ -2,7 +2,7 @@ function out = acc()
     %% ACC time constants
     % Accelerometer sampling frequency [Hz]
     out.internal_freq       = 7000;
-    out.output_freq         = 100;
+    out.output_freq         = 20;
     out.internal_tsample    = 1/out.internal_freq;
     out.output_tsample      = 1/out.output_freq;
     

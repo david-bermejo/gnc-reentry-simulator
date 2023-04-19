@@ -1,5 +1,5 @@
 function out = nav()
-    out.freq = 100;
+    out.freq = 20;
     out.tsamp = 1/out.freq;
 
     % Initial Conditions
