@@ -21,13 +21,13 @@ params.q_max = 10000;               % [Pa]
 params.n_max = 2;                   % [-]
 params.d_chi_max = deg2rad(4);      % [rad]
 
-params.drag_clean = drag_clean_interpolant('makima');
-params.lift_clean = lift_clean_interpolant('makima');
-params.pitch_clean = pitch_clean_interpolant('makima');
-params.pitch_flap = pitch_inc_body_flap_interpolant('makima');
-params.drag_flap = drag_inc_body_flap_interpolant('makima');
-params.lift_flap = lift_inc_body_flap_interpolant('makima');
-[params.T_interp, params.p_interp, params.rho_interp] = atmosphere('makima');
+params.drag_clean = drag_clean_interpolant('linear');
+params.lift_clean = lift_clean_interpolant('linear');
+params.pitch_clean = pitch_clean_interpolant('linear');
+params.pitch_flap = pitch_inc_body_flap_interpolant('linear');
+params.drag_flap = drag_inc_body_flap_interpolant('linear');
+params.lift_flap = lift_inc_body_flap_interpolant('linear');
+[params.T_interp, params.p_interp, params.rho_interp] = atmosphere('linear');
 
 %% Initial conditions
 R0 = params.Rp + 120.0e3;           % [m]
@@ -53,34 +53,39 @@ options = optimoptions("surrogateopt", "Display", "iter", ...
     "UseParallel", true, 'UseVectorized',true, ...
     'MaxFunctionEvaluations', 250000);
 
-[x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
-
-fprintf("V0: %f m/s\n", x(1));
-fprintf("gamma0: %f deg\n", rad2deg(x(2)));
-fprintf("tau0: %f deg\n", rad2deg(x(3)));
-fprintf("delta0: %f deg\n", rad2deg(x(4)));
-fprintf("chi0: %f deg\n", rad2deg(x(5)));
-
-%% Obtain reentry solution for optimal initial conditions
-% x = [V0, gamma0, tau0, delta0, chi0];
-[ts, y, u, ~] = objfun(x, params);
-
-%% Save variables for Simulink
-
-%e0 = y(4,1)^2 / 2 - params.mu ./ y(1,1);
-%energy = (y(4,:).^2 ./ 2 - params.mu ./ y(1,:)) ./ e0;
-e0 = y(4,1)^2/2 + params.mu/y(1,1)^2*(y(1,1) - params.Rp);
-energy = y(4,:).^2./2 + params.mu./y(1,:).^2.*(y(1,:) - params.Rp);
-energy = energy / e0;
-
-tau0 = x(3);
-delta0 = x(4);
-V0 = x(1);
-gamma0 = x(2);
-chi0 = x(5);
-
-save('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
-    'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+if false
+    [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
+    
+    fprintf("V0: %f m/s\n", x(1));
+    fprintf("gamma0: %f deg\n", rad2deg(x(2)));
+    fprintf("tau0: %f deg\n", rad2deg(x(3)));
+    fprintf("delta0: %f deg\n", rad2deg(x(4)));
+    fprintf("chi0: %f deg\n", rad2deg(x(5)));
+    
+    %% Obtain reentry solution for optimal initial conditions
+    % x = [V0, gamma0, tau0, delta0, chi0];
+    [ts, y, u, ~] = objfun(x, params);
+    
+    %% Save variables for Simulink
+    
+    %e0 = y(4,1)^2 / 2 - params.mu ./ y(1,1);
+    %energy = (y(4,:).^2 ./ 2 - params.mu ./ y(1,:)) ./ e0;
+    e0 = y(4,1)^2/2 + params.mu/y(1,1)^2*(y(1,1) - params.Rp);
+    energy = y(4,:).^2./2 + params.mu./y(1,:).^2.*(y(1,:) - params.Rp);
+    energy = energy / e0;
+    
+    tau0 = x(3);
+    delta0 = x(4);
+    V0 = x(1);
+    gamma0 = x(2);
+    chi0 = x(5);
+    
+    save('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
+        'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+else
+    load('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
+        'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+end
 
 %% Plot results
 figure();
@@ -106,7 +111,7 @@ grid;
 
 figure();
 plot(ts, u(2,:));
-title('Body flap: $\delta_b$(t)');
+title('Body flap: \delta_b(t)');
 xlabel('t [s]');
 ylabel('Body flap [deg]');
 grid;
@@ -135,20 +140,23 @@ grid;
 figure;
 subplot(2, 1, 1);
 plot(ts, rad2deg(y(2,:)));
+title('Longitude');
 xlabel('t [s]');
-ylabel('long [deg]');
+ylabel('\tau [deg]');
 grid;
 subplot(2, 1, 2);
 plot(ts, rad2deg(y(3,:)));
+title('Latitude');
 xlabel('t [s]');
-ylabel('lat [deg]');
+ylabel('\delta [deg]');
 grid;
 
 figure;
 subplot(2, 1, 1);
 plot(ts, rad2deg(y(5,:)));
+title('Flight Path Angle');
 xlabel('t [s]');
-ylabel('gamma [deg]');
+ylabel('\gamma [deg]');
 grid;
 subplot(2, 1, 2);
 plot(ts, rad2deg(y(6,:)));
@@ -156,16 +164,17 @@ hold on;
 plot(ts, rad2deg(delta_heading(y, params) + y(6,:)));
 plot(ts, rad2deg(delta_heading(y, params)));
 hold off;
+title('Heading');
 xlabel('t [s]');
-ylabel('chi [deg]');
-legend('chi', 'chi_d', 'delta_chi');
+ylabel('\chi [deg]');
+legend('\chi', '\chi_t', '\Delta\chi');
 grid;
 
 figure;
 plot(ts, rad2deg(delta_heading(y, params)));
-title('Heading angle error delta_chi(t)');
+title('Heading angle error \Delta\chi(t)');
 xlabel('t [s]');
-ylabel('Heading Angle Error [deg]');
+ylabel('\Delta\chi [deg]');
 grid;
 
 constr = calc_constraints(ts, y, u, params);
@@ -211,6 +220,7 @@ plot(V3/1000, h/1000, '--');
 plot(V4/1000, h/1000, '--');
 hold off;
 xlim([0, V0/1000*1.025]);
+title('Entry Corridor');
 xlabel('V [km/s]');
 ylabel('h [km]');
 name = legend('', 'Numerical Solution', 'Glide, $\alpha = 40^{\circ}$', ...
@@ -285,6 +295,7 @@ function [ts, y, u, J] = objfun(opt, p)
             
             d_chi = delta_heading(y(:,i-1), p);
             u(1,i) = acos(tmp) .* sgn(d_chi, p.d_chi_max, u(1,i-1));
+            u(1,i) = max(min(u(1,i), deg2rad(165)), deg2rad(-165));
         end
     
         % Solve the problem
@@ -339,8 +350,8 @@ function [Cin, Ceq] = nlcon(t, x, u, p)
     L = q_inf.*CL.*p.Sref;
     
     Qdot = 1.9027e-7 .* sqrt(rho./p.Rn) .* x(4,:).^3;   % [kW/m^2]
-    AoA_rad = deg2rad(AoA);
-    n = (D.*sin(AoA_rad) + L.*cos(AoA_rad)) ./ (p.m.*p.g0);     % [-]
+    %AoA_rad = deg2rad(AoA);
+    n = sqrt(D.^2 + L.^2) ./ (p.m.*p.g0);     % [-]
 
     Cin = [Qdot - p.Qdot_max; q_inf - p.q_max; n - p.n_max];
     Ceq = [];

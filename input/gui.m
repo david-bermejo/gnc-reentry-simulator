@@ -3,9 +3,11 @@ function out = gui()
     tau_max     = deg2rad(0.5);     % [rad]
     delta_max   = deg2rad(0.5);     % [rad]
     V_max       = 50;               % [m/s]
-    gamma_max   = deg2rad(0.5);    % [rad]
+    gamma_max   = deg2rad(0.5);     % [rad]
     chi_max     = deg2rad(2.5);     % [rad]
-    sigma_max   = deg2rad(2.5);       % [rad]
+
+    AoA_max     = deg2rad(2.5);     % [rad]
+    sigma_max   = deg2rad(2.5);     % [rad]
 
     Q = zeros(3);
     Q(1,1) = 1/R_max^2;
@@ -16,10 +18,14 @@ function out = gui()
     %Q(5,5) = 1/chi_max^2;
 
     out.Q = Q;
-    out.R = [1/sigma_max^2];
+
+    R = zeros(2);
+    R(1,1) = 1/AoA_max^2;
+    R(2,2) = 1/sigma_max^2;
+    out.R = R;
 
     % Guidance Algorithm frequency [Hz]
-    out.freq = 0.5;
+    out.freq = 2;
     out.tsample = 1/out.freq;
 
     % Delay [s]

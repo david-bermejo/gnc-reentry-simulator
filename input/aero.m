@@ -12,5 +12,5 @@ function simdb_aero = aero()
     simdb_aero = append2struct(simdb_aero, {'Clb0', 'Clel'}, roll_coefficients(), 2);
     simdb_aero = append2struct(simdb_aero, {'Cm0', 'Cmb', 'Cmel'}, pitch_coefficients(), 3);
     simdb_aero = append2struct(simdb_aero, {'Cnb0', 'Cnbrl', 'Cnel', 'Cnrl'}, yaw_coefficients(), 4);
-    simdb_aero = append2struct(simdb_aero, {'dCL_dAoA', 'dCm_dAoA', 'dCm_del', 'dCl_del', 'dCn_del', 'dCn_drl'}, coeff_derivatives(simdb_aero), 6);
+    simdb_aero = append2struct(simdb_aero, {'dCD_dAoA', 'dCL_dAoA', 'dCm_dAoA', 'dCm_del', 'dCl_del', 'dCn_del', 'dCn_drl'}, coeff_derivatives(simdb_aero), 7);
 end

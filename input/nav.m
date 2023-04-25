@@ -7,7 +7,7 @@ function out = nav()
     R0      = (3396.2 + 120) * 1e3;
     alpha0  = deg2rad(40);
     beta0   = 0;
-    sigma0  = deg2rad(-180);
+    sigma0  = deg2rad(-165);
     
     % Initial state
     out.sc_pos_vrt_init         = [R0; tau0; delta0];

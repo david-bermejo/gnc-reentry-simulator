@@ -1,4 +1,18 @@
 function res = coeff_derivatives(simdb_aero)
+    %% Calculate dCD_dAoA
+    AoA_q = linspace(-0.1, 45.1, 1000);
+    M_q = simdb_aero.M_table;
+    
+    [xq, yq] = ndgrid(M_q, AoA_q);
+    res = interp2(simdb_aero.M_table, simdb_aero.AoA_table, ...
+        simdb_aero.CD0, xq, yq, "spline");
+    
+    dCD_dAoA_raw = diff(res(:,:),1,2) ./ diff(AoA_q);
+    
+    [xq, yq] = ndgrid(M_q, simdb_aero.AoA_table);
+    dCD_dAoA = interp2(simdb_aero.M_table, AoA_q(2:end), ...
+        dCD_dAoA_raw', xq, yq, "linear")';
+
     %% Calculate dCL_dAoA
     AoA_q = linspace(-0.1, 45.1, 1000);
     M_q = simdb_aero.M_table;
@@ -92,5 +106,5 @@ function res = coeff_derivatives(simdb_aero)
     dCn_drl = permute(dCn_drl, [2 1 3]);
     
     %% Return cell array
-    res = {dCL_dAoA, dCm_dAoA, dCm_del, dCl_del, dCn_del, dCn_drl};
+    res = {dCD_dAoA, dCL_dAoA, dCm_dAoA, dCm_del, dCl_del, dCn_del, dCn_drl};
 end
