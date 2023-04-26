@@ -1,9 +1,8 @@
 clear
 close all
-addpath(pwd + "\..\direct_collocation");
 addpath(pwd + "\..\fcn\aerodynamic_coefficients")
 addpath(pwd + "\..\fcn\atmospheric_model")
-addpath(pwd + "\..\fcn\gravity_model")
+%addpath(pwd + "\..\fcn\gravity_model")
 
 %% Parameters setup
 params.mu = 0.042828e15;            % [m^3/s^2]
@@ -27,7 +26,7 @@ params.pitch_clean = pitch_clean_interpolant('linear');
 params.pitch_flap = pitch_inc_body_flap_interpolant('linear');
 params.drag_flap = drag_inc_body_flap_interpolant('linear');
 params.lift_flap = lift_inc_body_flap_interpolant('linear');
-[params.T_interp, params.p_interp, params.rho_interp] = atmosphere('linear');
+[params.T_interp, params.p_interp, params.rho_interp] = atmosphere_interpolant('linear');
 
 %% Initial conditions
 R0 = params.Rp + 120.0e3;           % [m]
@@ -53,7 +52,7 @@ options = optimoptions("surrogateopt", "Display", "iter", ...
     "UseParallel", true, 'UseVectorized',true, ...
     'MaxFunctionEvaluations', 250000);
 
-if false
+if true
     [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
     
     fprintf("V0: %f m/s\n", x(1));
@@ -80,7 +79,7 @@ if false
     gamma0 = x(2);
     chi0 = x(5);
     
-    save('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
+    save('trajectory.mat', 'ts', 'energy', 'y', 'u', ...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 else
     load('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
@@ -299,7 +298,7 @@ function [ts, y, u, J] = objfun(opt, p)
         end
     
         % Solve the problem
-        solution = ode45(@(t, x) dynamics_fixed(t, x, u(:,i), p), [ts(i-1), ts(i)], y(:,i-1), options);
+        solution = ode45(@(t, x) dynamics(t, x, u(:,i), p), [ts(i-1), ts(i)], y(:,i-1), options);
     
         % Save solution
         y(:,i) = solution.y(:,end);
@@ -325,7 +324,7 @@ function [ts, y, u, J] = objfun(opt, p)
 end
 
 function cost = objBnd(x0, t0, xf, tf, p)
-    cost = 10*((xf(2) - p.xf(2))^2 + (xf(3) - p.xf(3))^2);
+    cost = (xf(2) - p.xf(2))^2 + (xf(3) - p.xf(3))^2;
 end
 
 function res = pathCst(x)
@@ -350,7 +349,6 @@ function [Cin, Ceq] = nlcon(t, x, u, p)
     L = q_inf.*CL.*p.Sref;
     
     Qdot = 1.9027e-7 .* sqrt(rho./p.Rn) .* x(4,:).^3;   % [kW/m^2]
-    %AoA_rad = deg2rad(AoA);
     n = sqrt(D.^2 + L.^2) ./ (p.m.*p.g0);     % [-]
 
     Cin = [Qdot - p.Qdot_max; q_inf - p.q_max; n - p.n_max];

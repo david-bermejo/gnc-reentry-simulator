@@ -1,7 +1,7 @@
-function xdot = dynamics(t, x, u, p)
+function xdot = dynamics_fixed(t, x, u, p)
     % x = [R, lon, lat, V, gamma, chi]
     % u = [sigma]
-
+    
     sd = sin(x(3,:));
     cd = cos(x(3,:));
     td = tan(x(3,:));
@@ -19,8 +19,14 @@ function xdot = dynamics(t, x, u, p)
     AoA = AoA_curve(M);
 
     q_inf = 0.5.*rho.*x(4,:).^2;
-    CD = p.drag_clean(AoA, M);
-    CL = p.lift_clean(AoA, M);
+
+    CD0 = p.drag_clean(AoA, M);
+    CL0 = p.lift_clean(AoA, M);
+    CDb = p.drag_flap(AoA, u(2,:), M);
+    CLb = p.lift_flap(AoA, u(2,:), M);
+    CD = CD0 + CDb;
+    CL = CL0 + CLb;
+
     D = q_inf.*CD.*p.Sref;
     L = q_inf.*CL.*p.Sref;
 
