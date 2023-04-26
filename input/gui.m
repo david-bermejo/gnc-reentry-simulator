@@ -1,13 +1,13 @@
 function out = gui()
-    R_max       = 100;              % [m]
+    R_max       = 50;              % [m]
     tau_max     = deg2rad(0.5);     % [rad]
     delta_max   = deg2rad(0.5);     % [rad]
-    V_max       = 50;               % [m/s]
-    gamma_max   = deg2rad(0.5);     % [rad]
+    V_max       = 25;               % [m/s]
+    gamma_max   = deg2rad(0.25);     % [rad]
     chi_max     = deg2rad(2.5);     % [rad]
 
-    AoA_max     = deg2rad(2.5);     % [rad]
-    sigma_max   = deg2rad(2.5);     % [rad]
+    AoA_max     = deg2rad(0.1);     % [rad]
+    sigma_max   = deg2rad(0.1);     % [rad]
 
     Q = zeros(3);
     Q(1,1) = 1/R_max^2;
