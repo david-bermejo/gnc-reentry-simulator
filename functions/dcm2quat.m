@@ -1,4 +1,6 @@
 function q = dcm2quat(dcm)
+    % Transforms a Direction Cosine Matrix into its equivalent quaternion.
+    
     qw = 0.5 * sqrt(1 + dcm(1,1) + dcm(2,2) + dcm(3,3));
     q = [qw; ...
          (dcm(3,2) - dcm(2,3))/(4*qw); ...

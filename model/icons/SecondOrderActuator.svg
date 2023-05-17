@@ -1,0 +1,8 @@
+<?xml-stylesheet href="defaultstyles.css" type="text/css"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:d="http://www.mathworks.com/blockgraphics" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="svg_3" width="185" height="120" d:options="PreserveAspect:On;ScalingOnResizeMax:2.0;Rotate:Off;Resize:FitToBlock">
+	<g id="layer_5" title="layer_0">
+		<math id="equation_5" height="43.97" width="89.16" class="equation" style="font-size:13px; scalingFactors:0.7" x="47.92" y="42.24">
+			$$\frac{\omega_n^2}{s^2 + 2\zeta\omega_n s + \omega_n^2}
+			$$		</math>
+	</g>
+</svg>

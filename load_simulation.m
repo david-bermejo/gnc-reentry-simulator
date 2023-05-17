@@ -2,5 +2,5 @@
 addpath("functions\");
 addpath("model\lib\");
 
-%% Process every file inside inputs
+%% Process every file inside input folder and load 'simdb' structure
 run input/simdb_init.m

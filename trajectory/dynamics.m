@@ -1,4 +1,4 @@
-function xdot = dynamics_fixed(t, x, u, p)
+function xdot = dynamics(t, x, u, p)
     % x = [R, lon, lat, V, gamma, chi]
     % u = [sigma]
     

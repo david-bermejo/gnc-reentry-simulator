@@ -1,10 +1,15 @@
 function simdb_aero = aero()
-    %% Aerodynamic coefficients - database initialization
-    simdb_aero.AoA_table = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45];          % deg
-    simdb_aero.M_table = [1.2, 1.5, 2, 3, 5, 10, 20, 30, 40];                       % deg
-    simdb_aero.delta_el_table = [-40, -30, -20, -10, 0, 10, 20, 30, 40];    % deg
-    simdb_aero.delta_rl_table = [0, 10, 20, 30, 40];                        % deg
-    simdb_aero.delta_b_table = [-20, -10, 0, 10, 20, 30];                   % deg
+    %% Aerodynamic coefficients database
+    % Angle of attack table:
+    simdb_aero.AoA_table = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45];          % [deg]
+    % Mach number table:
+    simdb_aero.M_table = [1.2, 1.5, 2, 3, 5, 10, 20, 30, 40];               % [-]
+    % Elevon deflection table:
+    simdb_aero.delta_el_table = [-40, -30, -20, -10, 0, 10, 20, 30, 40];    % [deg]
+    % Rudder deflection table:
+    simdb_aero.delta_rl_table = [0, 10, 20, 30, 40];                        % [deg]
+    % Body flap deflection table:
+    simdb_aero.delta_b_table = [-20, -10, 0, 10, 20, 30];                   % [deg]
     
     simdb_aero = append2struct(simdb_aero, {'CL0', 'CLb', 'CLel'}, lift_coefficients(), 3);
     simdb_aero = append2struct(simdb_aero, {'CSb0', 'CSbel', 'CSel', 'CSrl'}, sideforce_coefficients(), 4);

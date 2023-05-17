@@ -1,0 +1,8 @@
+<?xml-stylesheet href="defaultstyles.css" type="text/css"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:d="http://www.mathworks.com/blockgraphics" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="svg_3" width="90" height="60" d:options="PreserveAspect:On;ScalingOnResizeMax:2.0;Rotate:Off;Resize:FitToBlock">
+	<g id="layer_4" title="layer_0">
+		<math id="equation_6" class="equation" height="45.78" width="55.58" x="17.21" y="7.11" style="font-size:13px; scalingFactors:0.7">
+			$$\sum_{k=1}^N \frac{\left(A\Delta t\right)^k}{k!}
+			$$		</math>
+	</g>
+</svg>

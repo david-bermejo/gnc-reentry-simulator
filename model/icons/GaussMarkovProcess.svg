@@ -1,0 +1,8 @@
+<?xml-stylesheet href="defaultstyles.css" type="text/css"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:d="http://www.mathworks.com/blockgraphics" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="svg_3" width="202" height="48" d:options="PreserveAspect:On;ScalingOnResizeMax:2.0;Rotate:Off;Resize:FitToBlock">
+	<g id="layer_5" title="layer_0">
+		<math id="equation_5" height="32.69" width="120.31" class="equation" style="font-size:13px; scalingFactors:0.7" x="40.84" y="7.66">
+			$$y_k = (1 - \frac{\Delta t}{T_c})y_{k-1} + w_k
+			$$		</math>
+	</g>
+</svg>

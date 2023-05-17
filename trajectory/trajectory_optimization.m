@@ -2,7 +2,6 @@ clear
 close all
 addpath(pwd + "\..\fcn\aerodynamic_coefficients")
 addpath(pwd + "\..\fcn\atmospheric_model")
-%addpath(pwd + "\..\fcn\gravity_model")
 
 %% Parameters setup
 params.mu = 0.042828e15;            % [m^3/s^2]
@@ -30,17 +29,17 @@ params.lift_flap = lift_inc_body_flap_interpolant('linear');
 
 %% Initial conditions
 R0 = params.Rp + 120.0e3;           % [m]
-tau0 = deg2rad(22.775755);               % [rad]
-delta0 = deg2rad(-17.866444);             % [rad]
-V0 = 5411.892434;                          % [m/s]
-gamma0 = deg2rad(-8.535284);             % [rad]
-chi0 = deg2rad(37.845789);               % [rad]
+tau0 = deg2rad(22.775755);          % [rad]
+delta0 = deg2rad(-17.866444);       % [rad]
+V0 = 5411.892434;                   % [m/s]
+gamma0 = deg2rad(-8.535284);        % [rad]
+chi0 = deg2rad(37.845789);          % [rad]
 params.x0 = [R0, tau0, delta0, V0, gamma0, chi0]';
 
 %% Terminal conditions (Perseverance landing site)
-Rf = params.Rp + 10e3;               % [m]
-tauf = deg2rad(77.45);               % [rad]
-deltaf = deg2rad(18.44);             % [rad]
+Rf = params.Rp + 10e3;              % [m]
+tauf = deg2rad(77.45);              % [rad]
+deltaf = deg2rad(18.44);            % [rad]
 Vf = 800.0;                         % [m/s]
 gammaf = deg2rad(-2.0);             % [rad]
 chif = deg2rad(90.0);               % [rad]
@@ -79,7 +78,7 @@ if true
     gamma0 = x(2);
     chi0 = x(5);
     
-    save('trajectory.mat', 'ts', 'energy', 'y', 'u', ...
+    save('trajectory-test.mat', 'ts', 'energy', 'y', 'u', ...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 else
     load('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...

@@ -47,7 +47,7 @@ exact_sol_u = @(t) 6 - 12.*t;
 t = linspace(sol.t(1), sol.t(end), 10000);
 x = sol.interp.x(t);
 u = sol.interp.u(t);
-err = sol.interp.err(t);
+err = abs(sol.interp.err(t));
 
 figure;
 plot(t, x(1,:));
