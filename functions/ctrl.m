@@ -10,11 +10,14 @@ function Cb = ctrl(A, B)
     %
     % NOTE: This function is compatible with MATLAB's code generator.
 
-    sz = size(A,1);
-    Cb = zeros(sz,sz);
-    Cb(:,1) = B;
+    sz1 = size(A,1);
+    sz2 = size(B,2);
+    Cb = zeros(sz1,sz1*sz2);
+    Cb(:,1:sz2) = B;
 
-    for i=2:sz
-        Cb(:,i) = A*Cb(:,i-1);
+    for i=2:sz1
+        idx = (i-1)*sz2;
+        pidx = (i-2)*sz2;
+        Cb(:,idx+1:idx+sz2) = A*Cb(:,pidx+1:pidx+sz2);
     end
 end

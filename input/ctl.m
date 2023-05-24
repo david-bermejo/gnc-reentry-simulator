@@ -31,9 +31,9 @@ function out = ctl()
     % Maximum yaw rate deviation:
     r_max       = deg2rad(10);  % [deg]
     % Maximum angle of sideslip deviation:
-    AoS_max     = deg2rad(0.5); % [deg]
+    AoS_max     = deg2rad(1); % [deg]
     % Maximum bank angle deviation:
-    sigma_max   = deg2rad(1);   % [deg]
+    sigma_max   = deg2rad(4);   % [deg]
     % Maximum commanded aileron deflection:
     delta_a_max = deg2rad(40);  % [deg]
     % Maximum commanded rudder deflection:

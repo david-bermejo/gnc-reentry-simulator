@@ -51,7 +51,7 @@ options = optimoptions("surrogateopt", "Display", "iter", ...
     "UseParallel", true, 'UseVectorized',true, ...
     'MaxFunctionEvaluations', 250000);
 
-if true
+if false
     [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
     
     fprintf("V0: %f m/s\n", x(1));
@@ -81,7 +81,7 @@ if true
     save('trajectory-test.mat', 'ts', 'energy', 'y', 'u', ...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 else
-    load('../input/trajectory.mat', 'ts', 'energy', 'y', 'u', ...
+    load('../input/trajectory-v3.mat', 'ts', 'energy', 'y', 'u', ...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 end
 
@@ -258,13 +258,22 @@ function [ts, y, u, J] = objfun(opt, p)
     p.x0(5) = opt(2);
     p.x0(6) = opt(5);
 
+    N = 10000;
     tspan = [0, 2000];
-    ts = tspan(1):1:tspan(end);
-    N = length(ts);
+    ts = linspace(tspan(1), tspan(2), N);
+    dt = ts(2) - ts(1);
     
+    bank = zeros(1,N);
     u = zeros(2,N);
     y = zeros(6,N);
     y(:,1) = p.x0;
+
+    omega_n = (20/360)*2*pi;
+    damp = 1;
+    A = [0 1; -omega_n^2 -2*damp*omega_n];
+    B = [0; omega_n^2];
+    Y0 = [deg2rad(-160); 0];
+    Y = Y0;
 
     options = odeset('MaxStep',2, 'Events', @(t, x) myEvent(t, x, p));
     
@@ -293,11 +302,17 @@ function [ts, y, u, J] = objfun(opt, p)
             
             d_chi = delta_heading(y(:,i-1), p);
             u(1,i) = acos(tmp) .* sgn(d_chi, p.d_chi_max, u(1,i-1));
-            u(1,i) = max(min(u(1,i), deg2rad(165)), deg2rad(-165));
+            u(1,i) = max(min(u(1,i), deg2rad(160)), deg2rad(-160));
+
+            M = 10;
+            for j=1:M
+                Y = Y + (A*Y + B*u(1,i))*(dt/M);
+            end
+            bank(i) = Y(1);
         end
     
         % Solve the problem
-        solution = ode45(@(t, x) dynamics(t, x, u(:,i), p), [ts(i-1), ts(i)], y(:,i-1), options);
+        solution = ode45(@(t, x) dynamics(t, x, [bank(i); u(2,i)], p), [ts(i-1), ts(i)], y(:,i-1), options);
     
         % Save solution
         y(:,i) = solution.y(:,end);
@@ -306,7 +321,15 @@ function [ts, y, u, J] = objfun(opt, p)
             ts = ts(1:i);
             y = y(:,1:i);
             u = u(:,1:i);
+            bank = bank(1:i);
+            u = [bank; u(2,:)];
+            u(:,1) = u(:,2);
             break;
+        end
+
+        if y(1,i) - p.Rp >= 150e3
+            J = Inf;
+            return;
         end
     end
 

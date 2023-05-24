@@ -9,32 +9,35 @@ function out = gui()
 
     %% Guidance Linear Quadratic Regulator configuration
     % Maximum radial position deviation:
-    R_max      = 50;              % [m]
+    R_max      = 100;              % [m]
     % Maximum latitude deviation:
-    delta_max  = deg2rad(0.1);    % [rad]
+    delta_max  = deg2rad(1.0);    % [rad]
     % Maximum velocity deviation (magnitude):
     V_max      = 5;               % [m/s]
     % Maximum glideslope deviation:
-    gamma_max  = deg2rad(0.1);    % [rad]
+    gamma_max  = deg2rad(0.5);    % [rad]
     % Maximum heading deviation:
-    chi_max    = deg2rad(2.5);    % [rad]
+    chi_max    = deg2rad(1.5);    % [rad]
+    % Maximum commanded angle of attack deviation:
+    AoA_max  = deg2rad(2);      % [rad]
     % Maximum commanded bank angle deviation:
-    sigma_max  = deg2rad(1);      % [rad]
+    sigma_max  = deg2rad(4);      % [rad]
 
     % State cost matrix:
     out.Q      = zeros(3);
     out.Q(1,1) = 1/R_max^2;
-    out.Q(2,2) = 1/delta_max^2;
-    out.Q(3,3) = 1/V_max^2;
-    out.Q(4,4) = 1/gamma_max^2;
-    out.Q(5,5) = 1/chi_max^2;
+    %out.Q(2,2) = 1/delta_max^2;
+    out.Q(2,2) = 1/V_max^2;
+    out.Q(3,3) = 1/gamma_max^2;
+    %out.Q(5,5) = 1/chi_max^2;
 
     % Control cost matrix:
-    out.R      = zeros(1);
-    out.R(1,1) = 1/sigma_max^2;
+    out.R      = zeros(2);
+    out.R(1,1) = 1/AoA_max^2;
+    out.R(2,2) = 1/sigma_max^2;
 
     %% Reference Trajectory (offline)
-    load('trajectory.mat', 'ts', 'y', 'u');
+    load('trajectory-v3.mat', 'ts', 'y', 'u');
     % Reference time:
     out.t_gui = ts;
     % Reference state:

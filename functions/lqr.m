@@ -1,4 +1,4 @@
-function [K, P] = lqr(A, B, Q, R)
+function [K, P] = lqra(A, B, Q, R)
     % Computes the feedback matrix for the continuous time, infinite-
     % horizon Linear Quadratic Regulator.
     %
@@ -10,7 +10,9 @@ function [K, P] = lqr(A, B, Q, R)
     % NOTE: this function is compatible with MATLAB's code generator.
     %
 
-    K = zeros(1,size(A,1));
+    rows = size(B,2);
+    cols = size(A,1);
+    K = zeros(rows,cols);
 
     J = R\B';
     G = B*J;
@@ -24,5 +26,5 @@ function [K, P] = lqr(A, B, Q, R)
     U21 = V((sz/2+1):sz, idx);
     
     P = real(U21/U11);
-    K = J*P;
+    K(:,:) = J*P;
 end

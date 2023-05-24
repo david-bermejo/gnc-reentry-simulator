@@ -16,7 +16,7 @@ function out = nav()
     out.tsamp = 1/out.freq; % [s]
 
     %% SC initial conditions (offline trajectory)
-    load('trajectory.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    load('trajectory-v3.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
     % Initial radial position:
     R0      = Rp + 120e3;       % [m]
     % Initial angle of attack:
@@ -72,9 +72,9 @@ function out = nav()
 
     % Initial state error covariance matrix
     out.P0 = zeros(9);
-    out.P0(1:3,1:3) = 100^2 * eye(3);
-    out.P0(4:6,4:6) = 1^2 * eye(3);
-    out.P0(7:9,7:9) = (1e-4)^2 * eye(3);
+    out.P0(1:3,1:3) = 500^2 * eye(3);
+    out.P0(4:6,4:6) = 10^2 * eye(3);
+    out.P0(7:9,7:9) = (1e-3)^2 * eye(3);
     out.P0 = out.P0;
     
     % Velocity Random Walk [m/s^(3/2)]

@@ -1,4 +1,8 @@
 function out = sc()
+    %% Constants
+    % Standard gravity:
+    out.g0      = 9.80665;  % [m/s^2]
+
     %% Geometry related constants
     % Reference area:
     out.Sref    = 110;      % [m^2]
@@ -28,48 +32,57 @@ function out = sc()
     out.Fmax    = 400;      % [N]
     % Propellant specific impulse (Hydrazine):
     out.Isp     = 220;      % [s]
-    % Standard gravity:
-    out.g0      = 9.80665;  % [m/s^2]
+    % Minimum Impulse Bit:
+    out.MIB     = 0;
+    % First Order Time Constant [-]:
+    out.thr_tau = 0.001;
+
+    out.Tx_max = 4*out.Fmax;
+    out.Ty_max = 26*out.Fmax;
+    out.Tz_max = 19*out.Fmax;
 
     % Position of each thruster (w.r.t. CoM):
     out.RCS_pos = [ % Roll Thrusters (Tx)
-                     7.0,  2.0, 0.0;
-                     7.0,  2.0, 0.0;
-                     7.0, -2.0, 0.0;
-                     7.0, -2.0, 0.0;
+                    -7.0,  2.0, 0.0;
+                    -7.0,  2.0, 0.0;
+                    -7.0, -2.0, 0.0;
+                    -7.0, -2.0, 0.0;
 
                     % Pitch Thrusters (Ty)
-                   -12.0,  0.0, 0.0;
-                   -12.0,  0.0, 0.0;
-                     7.0,  0.0, 0.0;
-                     7.0,  0.0, 0.0;
-                     7.0,  0.0, 0.0;
-                     7.0,  0.0, 0.0;
+                    12.0,  0.0, 0.0;
+                    12.0,  0.0, 0.0;
+                    -7.0,  0.0, 0.0;
+                    -7.0,  0.0, 0.0;
+                    -7.0,  0.0, 0.0;
+                    -7.0,  0.0, 0.0;
 
                     % Yaw Thrusters (Tz)
-                   -12.0,  0.0, 0.3;
-                   -12.0,  0.0, 0.3;
-                     7.0,  0.0, 0.0;
-                     7.0,  0.0, 0.0]';
+                    12.0,  0.0, 0.3;
+                    12.0,  0.0, 0.3;
+                    -7.0,  0.0, 0.0;
+                    -7.0,  0.0, 0.0]';
 
     % RCS thruster direction:
     out.RCS_dir = [ % Roll Thrusters (Tx)
-                    0 0  1;
                     0 0 -1;
                     0 0  1;
                     0 0 -1;
+                    0 0  1;
 
                     % Pitch Thrusters (Ty)
-                    0 0  1;
                     0 0 -1;
-                    0 0  1;
                     0 0  1;
                     0 0 -1;
                     0 0 -1;
+                    0 0  1;
+                    0 0  1;
 
                     % Yaw Thrusters (Tz)
                     0  1 0;
                     0 -1 0;
                     0  1 0;
                     0 -1 0]';
+
+    % RCS torque vector:
+    out.RCS_tor = cross(out.RCS_pos, out.RCS_dir, 1);
 end

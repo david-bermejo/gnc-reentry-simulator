@@ -19,20 +19,57 @@ function out = env()
     out = append2struct(out, {'h_base', 'T_base', 'rho_base'}, atmospheric_coeffs(), 3);
 
     %% Initial Conditions (DKE propagator)
-    load('trajectory.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    load('trajectory-v3.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
     % Initial radial position:
-    R0      = out.Rp + 120e3;   % [m]
+    R0_mu       = out.Rp + 120e3;   % [m]
+    R0_std      = 500;              % [m]
+    R0          = randn(1)*R0_std + R0_mu;
+
+    % Initial longitude:
+    tau0_mu     = tau0;             % [rad]
+    tau0_std    = deg2rad(0.1);    % [rad]
+    tau0        = randn(1)*tau0_std + tau0_mu;
+
+    % Initial latitude:
+    delta0_mu   = delta0;           % [rad]
+    delta0_std  = deg2rad(0.1);    % [rad]
+    delta0      = randn(1)*delta0_std + delta0_mu;
+
+    % Initial velocity:
+    V0_mu       = V0;               % [m/s]
+    V0_std      = 10;               % [m/s]
+    V0          = randn(1)*V0_std + V0_mu;
+    
+    % Initial glideslope:
+    gamma0_mu   = gamma0;           % [rad]
+    gamma0_std  = deg2rad(0.1);     % [rad]
+    gamma0      = randn(1)*gamma0_std + gamma0_mu;
+
+    % Initial heading:
+    chi0_mu     = chi0;             % [rad]
+    chi0_std    = deg2rad(0.1);     % [rad]
+    chi0        = randn(1)*chi0_std + chi0_mu;
+
     % Initial angle of attack:
-    alpha0  = deg2rad(40);      % [deg]
+    alpha0_mu   = deg2rad(40);      % [rad]
+    alpha0_std  = deg2rad(0.1);       % [rad]
+    alpha0      = randn(1)*alpha0_std + alpha0_mu;
+
     % Initial angle of sideslip:
-    beta0   = 0;                % [deg]
+    beta0_mu    = 0;                % [rad]
+    beta0_std   = deg2rad(0.1);     % [rad]
+    beta0       = randn(1)*beta0_std + beta0_mu;
+
     % Initial commanded bank angle:
-    sigma0  = deg2rad(-165);    % [deg]
+    sigma0_mu   = deg2rad(-165);    % [rad]
+    sigma0_std  = deg2rad(0.1);       % [rad]
+    sigma0      = randn(1)*sigma0_std + sigma0_mu;
+
     % Initial attitude quaternion:
-    q0      = dcm2quat(...
-                z2dcm(-tau0) * y2dcm(pi/2 + delta0) * ...
-                z2dcm(-chi0) * y2dcm(-gamma0) * ...
-                x2dcm(sigma0) * z2dcm(beta0) * y2dcm(-alpha0));
+    q0          = dcm2quat(...
+                    z2dcm(-tau0) * y2dcm(pi/2 + delta0) * ...
+                    z2dcm(-chi0) * y2dcm(-gamma0) * ...
+                    x2dcm(sigma0) * z2dcm(beta0) * y2dcm(-alpha0));
 
     % Initial state (16x1):
     out.x0  = [R0; tau0; delta0; ...
