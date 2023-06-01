@@ -12,47 +12,56 @@ function out = env()
     out.g0       = 9.80665;         % [m/s^2]
     % Gas constant:
     out.gamma    = 1.2941;          % [-]
-    % Gas constant:
+    % Gas constant #2:
     out.Rg       = 8314.3/44.01;    % [-]
 
     %% Atmospheric Model (Mars Climate Database)
     out = append2struct(out, {'h_base', 'T_base', 'rho_base'}, atmospheric_coeffs(), 3);
 
+    % Initial atmospheric density bias (relative percentage):
+    out.rho_bias = min(max(randn(1,1)*0.1, -0.2), 0.3);  % [-]
+    % Atmospheric density noise variance:
+    out.rho_var  = 0.025^2;           % [-]
+    % Atmospheric density noise seed:
+    out.rho_seed = randi(100000,1); % [-]
+    % Atmospheric density autocorrelation time:
+    out.rho_Tc   = 100;             % [s]
+
     %% Initial Conditions (DKE propagator)
-    load('trajectory-v3.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    load('trajectory-v33.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0', 'u');
     % Initial radial position:
     R0_mu       = out.Rp + 120e3;   % [m]
-    R0_std      = 500;              % [m]
+    R0_std      = 100;              % [m]
     R0          = randn(1)*R0_std + R0_mu;
 
     % Initial longitude:
     tau0_mu     = tau0;             % [rad]
-    tau0_std    = deg2rad(0.1);    % [rad]
+    tau0_std    = deg2rad(0.02);    % [rad]
     tau0        = randn(1)*tau0_std + tau0_mu;
 
     % Initial latitude:
     delta0_mu   = delta0;           % [rad]
-    delta0_std  = deg2rad(0.1);    % [rad]
+    delta0_std  = deg2rad(0.02);    % [rad]
     delta0      = randn(1)*delta0_std + delta0_mu;
 
     % Initial velocity:
     V0_mu       = V0;               % [m/s]
-    V0_std      = 10;               % [m/s]
+    V0_std      = 5;               % [m/s]
     V0          = randn(1)*V0_std + V0_mu;
     
     % Initial glideslope:
     gamma0_mu   = gamma0;           % [rad]
-    gamma0_std  = deg2rad(0.1);     % [rad]
+    gamma0_std  = deg2rad(0.02);     % [rad]
     gamma0      = randn(1)*gamma0_std + gamma0_mu;
 
     % Initial heading:
     chi0_mu     = chi0;             % [rad]
-    chi0_std    = deg2rad(0.1);     % [rad]
+    chi0_std    = deg2rad(0.02);     % [rad]
     chi0        = randn(1)*chi0_std + chi0_mu;
 
     % Initial angle of attack:
-    alpha0_mu   = deg2rad(40);      % [rad]
-    alpha0_std  = deg2rad(0.1);       % [rad]
+    alpha0_mu   = deg2rad(45);      % [rad]
+    alpha0_std  = deg2rad(0.1);     % [rad]
     alpha0      = randn(1)*alpha0_std + alpha0_mu;
 
     % Initial angle of sideslip:
@@ -61,8 +70,8 @@ function out = env()
     beta0       = randn(1)*beta0_std + beta0_mu;
 
     % Initial commanded bank angle:
-    sigma0_mu   = deg2rad(-165);    % [rad]
-    sigma0_std  = deg2rad(0.1);       % [rad]
+    sigma0_mu   = u(1,1);           % [rad]
+    sigma0_std  = deg2rad(0.1);     % [rad]
     sigma0      = randn(1)*sigma0_std + sigma0_mu;
 
     % Initial attitude quaternion:

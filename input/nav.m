@@ -16,15 +16,15 @@ function out = nav()
     out.tsamp = 1/out.freq; % [s]
 
     %% SC initial conditions (offline trajectory)
-    load('trajectory-v3.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    load('trajectory-v33.mat', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0', 'u');
     % Initial radial position:
     R0      = Rp + 120e3;       % [m]
     % Initial angle of attack:
-    alpha0  = deg2rad(40);      % [deg]
+    alpha0  = deg2rad(45);      % [deg]
     % Initial angle of sideslip:
     beta0   = 0;                % [deg]
     % Initial bank angle:
-    sigma0  = deg2rad(-165);    % [deg]
+    sigma0  = u(1,1);           % [deg]
     
     % Initial radial position, longitude & latitude:
     out.sc_pos_vrt_init         = [R0; tau0; delta0];

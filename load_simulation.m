@@ -6,4 +6,4 @@ addpath("model\lib\");
 run input/simdb_init.m
 
 %% Open Simulink model
-open_system('model/simulator.slx');
+%open_system('model/simulator.slx');

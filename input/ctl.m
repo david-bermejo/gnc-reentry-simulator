@@ -7,7 +7,7 @@ function out = ctl()
 
     %% Longitudinal LQR Controller configuration
     % Maximum pitch rate deviation:
-    q_max       = deg2rad(10);  % [deg]
+    q_max       = deg2rad(50);  % [deg/s]
     % Maximum angle of attack deviation:
     AoA_max     = deg2rad(0.5); % [deg]
     % Maximum commanded elevator deflection:
@@ -27,13 +27,13 @@ function out = ctl()
 
     %% Lateral LQR Controller configuration
     % Maximum roll rate deviation:
-    p_max       = deg2rad(10);  % [deg]
+    p_max       = deg2rad(50);  % [deg/s]
     % Maximum yaw rate deviation:
-    r_max       = deg2rad(10);  % [deg]
+    r_max       = deg2rad(50);  % [deg/s]
     % Maximum angle of sideslip deviation:
-    AoS_max     = deg2rad(1); % [deg]
+    AoS_max     = deg2rad(2); % [deg]
     % Maximum bank angle deviation:
-    sigma_max   = deg2rad(4);   % [deg]
+    sigma_max   = deg2rad(8);   % [deg]
     % Maximum commanded aileron deflection:
     delta_a_max = deg2rad(40);  % [deg]
     % Maximum commanded rudder deflection:

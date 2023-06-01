@@ -4,20 +4,31 @@ addpath(pwd + "\..\fcn\aerodynamic_coefficients")
 addpath(pwd + "\..\fcn\atmospheric_model")
 
 %% Parameters setup
-params.mu = 0.042828e15;            % [m^3/s^2]
-params.Rp = 3396.2 * 1e3;           % [m]
-params.omega_cb = 7.07765809e-5;    % [rad/s]
-params.gamma = 1.2941;              % [-]
-params.Rg = 8314.3/44.01;           % [-]
-params.Sref = 110;                  % [m^2]
-params.Rn = 1.2;                    % [m]
-params.m = 26029.0;                 % [kg]
-params.g0 = 9.81;                   % [m/s^2]
+params.mu        = 0.042828e15;     % [m^3/s^2]
+params.Rp        = 3396.2 * 1e3;    % [m]
+params.omega_cb  = 7.07765809e-5;   % [rad/s]
+params.gamma     = 1.2941;          % [-]
+params.Rg        = 8314.3/44.01;    % [-]
+params.Sref      = 110;             % [m^2]
+params.Rn        = 1.2;             % [m]
+params.m         = 26029.0;         % [kg]
+params.g0        = 9.81;            % [m/s^2]
 
-params.Qdot_max = 450;              % [kW/m^2]
-params.q_max = 10000;               % [Pa]
-params.n_max = 2;                   % [-]
-params.d_chi_max = deg2rad(4);      % [rad]
+params.Kq        = 1.9027e-7;       % [kW/m^2]
+params.R_max     = params.Rp+150e3; % [m]
+params.Qdot_max  = 500;             % [kW/m^2]
+params.q_max     = 10000;           % [Pa]
+params.n_max     = 2.5;               % [-]
+params.gamma_max = deg2rad(0);   % [rad]
+
+params.d_chi0    = deg2rad(4);      % [rad]
+params.d_chif    = deg2rad(2.5);      % [rad]
+params.M0        = 40;              % [-]
+params.Mf        = 5;               % [-]
+params.sigma_max = deg2rad(135);    % [rad]
+params.sigma_dot = deg2rad(15);     % [rad/s]
+params.sigma_dmp = 1.0;             % [-]
+params.r         = 0.95;             % [-]
 
 params.drag_clean = drag_clean_interpolant('linear');
 params.lift_clean = lift_clean_interpolant('linear');
@@ -26,6 +37,13 @@ params.pitch_flap = pitch_inc_body_flap_interpolant('linear');
 params.drag_flap = drag_inc_body_flap_interpolant('linear');
 params.lift_flap = lift_inc_body_flap_interpolant('linear');
 [params.T_interp, params.p_interp, params.rho_interp] = atmosphere_interpolant('linear');
+
+N = 1000;
+h = linspace(0, 120e3, N);
+rho = params.rho_interp(h);
+
+figure;
+semilogy(h/1000, rho, 'b');
 
 %% Initial conditions
 R0 = params.Rp + 120.0e3;           % [m]
@@ -37,7 +55,7 @@ chi0 = deg2rad(37.845789);          % [rad]
 params.x0 = [R0, tau0, delta0, V0, gamma0, chi0]';
 
 %% Terminal conditions (Perseverance landing site)
-Rf = params.Rp + 10e3;              % [m]
+Rf = params.Rp + 15e3;              % [m]
 tauf = deg2rad(77.45);              % [rad]
 deltaf = deg2rad(18.44);            % [rad]
 Vf = 800.0;                         % [m/s]
@@ -45,15 +63,21 @@ gammaf = deg2rad(-2.0);             % [rad]
 chif = deg2rad(90.0);               % [rad]
 params.xf = [Rf, tauf, deltaf, Vf, gammaf, chif]';
 
-lb = [5000; deg2rad(-15); deg2rad(0); deg2rad(-60); deg2rad(30)];
-ub = [7000; deg2rad(-7); deg2rad(70); deg2rad(5); deg2rad(60)];
-options = optimoptions("surrogateopt", "Display", "iter", ...
-    "UseParallel", true, 'UseVectorized',true, ...
-    'MaxFunctionEvaluations', 250000);
+lb = [5600; deg2rad(-14); deg2rad(10); deg2rad(-15); deg2rad(50)];
+ub = [6000; deg2rad(-9); deg2rad(60); deg2rad(20); deg2rad(90)];
+options = optimoptions("surrogateopt",...
+    'PlotFcn','surrogateoptplot',...
+    "Display", "iter",...
+    "UseParallel", true,...
+    'UseVectorized',true,...
+    'MaxFunctionEvaluations',250000);
 
-if false
+if true
     [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
-    
+    res = objval(x, params);
+
+    fprintf('\nObjective function value; %g\n', res.Fval);
+    fprintf('Inequalities: [%f, %f, %f, %f]\n\n', res.Ineq);
     fprintf("V0: %f m/s\n", x(1));
     fprintf("gamma0: %f deg\n", rad2deg(x(2)));
     fprintf("tau0: %f deg\n", rad2deg(x(3)));
@@ -62,27 +86,36 @@ if false
     
     %% Obtain reentry solution for optimal initial conditions
     % x = [V0, gamma0, tau0, delta0, chi0];
-    [ts, y, u, ~] = objfun(x, params);
+    [ts, y, u, bank] = objfun(x, params);
     
     %% Save variables for Simulink
     
-    %e0 = y(4,1)^2 / 2 - params.mu ./ y(1,1);
-    %energy = (y(4,:).^2 ./ 2 - params.mu ./ y(1,:)) ./ e0;
     e0 = y(4,1)^2/2 + params.mu/y(1,1)^2*(y(1,1) - params.Rp);
+    ef = y(4,end)^2/2 + params.mu/y(1,end)^2*(y(1,end) - params.Rp);
     energy = y(4,:).^2./2 + params.mu./y(1,:).^2.*(y(1,:) - params.Rp);
-    energy = energy / e0;
-    
+
     tau0 = x(3);
     delta0 = x(4);
     V0 = x(1);
     gamma0 = x(2);
     chi0 = x(5);
     
-    save('trajectory-test.mat', 'ts', 'energy', 'y', 'u', ...
-        'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    save('trajectory.mat', 'ts', 'energy', 'y', 'u',...
+        'e0', 'ef', 'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 else
-    load('../input/trajectory-v3.mat', 'ts', 'energy', 'y', 'u', ...
+    load('trajectory-v9.mat', 'ts', 'energy', 'y', 'u',...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
+    x = [V0, gamma0, tau0, delta0, chi0];
+    res = objval(x, params);
+
+    fprintf('\nObjective function value; %g\n', res.Fval);
+    fprintf('Inequalities: [%f, %f, %f, %f]\n\n', res.Ineq);
+
+    fprintf("V0: %f m/s\n", x(1));
+    fprintf("gamma0: %f deg\n", rad2deg(x(2)));
+    fprintf("tau0: %f deg\n", rad2deg(x(3)));
+    fprintf("delta0: %f deg\n", rad2deg(x(4)));
+    fprintf("chi0: %f deg\n", rad2deg(x(5)));
 end
 
 %% Plot results
@@ -94,14 +127,14 @@ ylabel('Energy');
 grid;
 
 figure();
-plot(energy, rad2deg(u(1,:)));
-title('Control Law: u(t)');
-xlabel('Energy [-]');
+plot(ts, rad2deg(u(1,:)));
+title('Raw Control Law: u(t)');
+xlabel('t [s]');
 ylabel('Bank Angle [deg]');
 grid;
 
 figure();
-plot(ts, rad2deg(u(1,:)));
+plot(ts, rad2deg(bank));
 title('Control Law: u(t)');
 xlabel('t [s]');
 ylabel('Bank Angle [deg]');
@@ -198,9 +231,9 @@ V4 = zeros(1, 100);
 
 
 for i=1:100
-    V1(i) = fzero(@(x) glide_eqn(40.0, x, h(i), params), 3000);
+    V1(i) = fzero(@(x) glide_eqn(45.0, x, h(i), params), 3000);
     V2(i) = fzero(@(x) total_heat_rate_eqn(x, h(i), params), 3000);
-    V3(i) = g_load_eqn(40.0, h(i), params);
+    V3(i) = fzero(@(x) g_load_eqn(45.0, x, h(i), params), 2000);
     V4(i) = qdyn_eqn(h(i), params);
 end
 
@@ -221,9 +254,9 @@ xlim([0, V0/1000*1.025]);
 title('Entry Corridor');
 xlabel('V [km/s]');
 ylabel('h [km]');
-name = legend('', 'Numerical Solution', 'Glide, $\alpha = 40^{\circ}$', ...
+name = legend('', 'Numerical Solution', 'Glide, $\alpha = 45^{\circ}$', ...
         "$\dot{Q}_{max} = " + params.Qdot_max + "\;kW/m^2$", ...
-        "$n_{max} = " + params.n_max + "$, $\alpha = 40^{\circ}$", ...
+        "$n_{max} = " + params.n_max + "$, $\alpha = 45^{\circ}$", ...
         "$q_{max} = " + params.q_max + "\;Pa$");
 set(name,'Interpreter','latex');
 grid;
@@ -247,19 +280,21 @@ yticks(-90:15:90);
 ytickformat('degrees');
 
 %% Equations
-function J = objval(opt, p)
-    [~, ~, ~, J] = objfun(opt, p);
+function f = objval(opt, p)
+    [~, ~, ~, ~, Fval, Ineq] = objfun(opt, p);
+    f.Fval = Fval;
+    f.Ineq = Ineq;
 end
 
-function [ts, y, u, J] = objfun(opt, p)
+function [ts, y, u, bank, Fval, Ineq] = objfun(opt, p)
     p.x0(2) = opt(3);
     p.x0(3) = opt(4);
     p.x0(4) = opt(1);
     p.x0(5) = opt(2);
     p.x0(6) = opt(5);
 
-    N = 10000;
-    tspan = [0, 2000];
+    N = 5501;
+    tspan = [0, 1100];
     ts = linspace(tspan(1), tspan(2), N);
     dt = ts(2) - ts(1);
     
@@ -268,48 +303,27 @@ function [ts, y, u, J] = objfun(opt, p)
     y = zeros(6,N);
     y(:,1) = p.x0;
 
-    omega_n = (20/360)*2*pi;
-    damp = 1;
+    omega_n = 10;
+    damp    = p.sigma_dmp;
     A = [0 1; -omega_n^2 -2*damp*omega_n];
     B = [0; omega_n^2];
-    Y0 = [deg2rad(-160); 0];
-    Y = Y0;
+    Y = [0; 0];
 
     options = odeset('MaxStep',2, 'Events', @(t, x) myEvent(t, x, p));
     
     for i=2:N
-        h = y(1,i-1) - p.Rp;
-    
-        if h <= 120e3
-            T = p.T_interp(h);
-            rho = p.rho_interp(h);
-            g = gravity(y(1,i-1));
-        
-            M = y(4,i-1) ./ sqrt(p.gamma.*p.Rg.*T);
-            AoA = AoA_curve(M);
-        
-            Cm0 = p.pitch_clean(AoA, M);
-            u(2,i) = fzero(@(x) Cm0 + p.pitch_flap(AoA,x,M), u(2,i-1));
-
-            q_inf = 0.5.*rho.*y(4,i-1).^2;
-            CL0 = p.lift_clean(AoA, M);
-            CLb = p.lift_flap(AoA, u(2,i), M);
-            CL = CL0 + CLb;
-            L = q_inf.*CL.*p.Sref;
-            
-            var = (g - y(4,i-1).^2./y(1,i-1)) .* cos(y(5,i-1)) .* p.m ./ L;
-            tmp = min(max(var, -1.0), 1.0);
-            
-            d_chi = delta_heading(y(:,i-1), p);
-            u(1,i) = acos(tmp) .* sgn(d_chi, p.d_chi_max, u(1,i-1));
-            u(1,i) = max(min(u(1,i), deg2rad(160)), deg2rad(-160));
-
-            M = 10;
-            for j=1:M
-                Y = Y + (A*Y + B*u(1,i))*(dt/M);
-            end
-            bank(i) = Y(1);
+        [u(1,i), u(2,i)] = bank_angle_cmd(y(:,i-1), u(:,i-1), p);
+        if i==2
+            Y(1) = u(1,i);
         end
+
+        M = 3;
+        for j=1:M
+            dY = A*Y + B*u(1,i);
+            dY(1) = max(min(dY(1), p.sigma_dot), -p.sigma_dot);
+            Y = Y + dY*(dt/M);
+        end
+        bank(i) = Y(1);
     
         % Solve the problem
         solution = ode45(@(t, x) dynamics(t, x, [bank(i); u(2,i)], p), [ts(i-1), ts(i)], y(:,i-1), options);
@@ -320,33 +334,44 @@ function [ts, y, u, J] = objfun(opt, p)
         if y(1,i) <= p.xf(1)
             ts = ts(1:i);
             y = y(:,1:i);
-            u = u(:,1:i);
-            bank = bank(1:i);
-            u = [bank; u(2,:)];
             u(:,1) = u(:,2);
+            u = abs(u(:,1:i));
+            bank = bank(1:i);
+            bank(1) = bank(2);
             break;
-        end
 
-        if y(1,i) - p.Rp >= 150e3
-            J = Inf;
+        elseif y(1,i) >= p.R_max
+            ts = ts(1:i);
+            y = y(:,1:i);
+            u(:,1) = u(:,2);
+            u = abs(u(:,1:i));
+            bank = bank(1:i);
+            bank(1) = bank(2);
+            Fval = Inf;
+            Ineq = ones(4,1)*Inf;
             return;
-        end
-    end
 
-    if ts(end) == tspan(end)
-        J = Inf;
-        return;
+        elseif i == N
+            bank(1) = bank(2);
+            u(:,1) = u(:,2);
+            u = abs(u);
+        end
     end
 
     [Cin, ~] = nlcon(ts, y, u, p);
     cst = pathCst(Cin);
     cost = objBnd(y(:,1), ts(1), y(:,end), ts(end), p);
 
-    J = cost + 1e6 .* sum((ts(2:end) - ts(1:end-1))./2 .* (cst(:,1:end-1) + cst(:,2:end)), "all");
+    Fval = cost;
+    if i < N
+        Ineq = sum((ts(2:end) - ts(1:end-1))./2 .* (cst(:,1:end-1) + cst(:,2:end)), 2);
+    else
+        Ineq = ones(size(cst(:,1)))*Inf;
+    end
 end
 
 function cost = objBnd(x0, t0, xf, tf, p)
-    cost = (xf(2) - p.xf(2))^2 + (xf(3) - p.xf(3))^2;
+    cost = log10((xf(2) - p.xf(2))^2 + (xf(3) - p.xf(3))^2);
 end
 
 function res = pathCst(x)
@@ -370,17 +395,17 @@ function [Cin, Ceq] = nlcon(t, x, u, p)
     D = q_inf.*CD.*p.Sref;
     L = q_inf.*CL.*p.Sref;
     
-    Qdot = 1.9027e-7 .* sqrt(rho./p.Rn) .* x(4,:).^3;   % [kW/m^2]
+    Qdot = p.Kq .* sqrt(rho./p.Rn) .* x(4,:).^3;   % [kW/m^2]
     n = sqrt(D.^2 + L.^2) ./ (p.m.*p.g0);     % [-]
 
-    Cin = [Qdot - p.Qdot_max; q_inf - p.q_max; n - p.n_max];
+    Cin = [Qdot./p.Qdot_max-1; q_inf./p.q_max-1; n./p.n_max-1; x(5,:)-p.gamma_max];
     Ceq = [];
     return 
 end
 
 function C = calc_constraints(t, x, u, p)
     [Cin, ~] = nlcon(t, x, u, p);
-    C = Cin + [p.Qdot_max; p.q_max; p.n_max];
+    C = (Cin + [1;1;1;p.gamma_max]) .* [p.Qdot_max; p.q_max; p.n_max; 1];
 end
 
 function [value, isterminal, direction] = myEvent(t, x, p)
