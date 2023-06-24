@@ -82,7 +82,7 @@ options = optimoptions("surrogateopt",...
     'UseVectorized',true,...
     'MaxFunctionEvaluations',250000);
 
-if false
+if true
     [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
     res = objval(x, params);
 
