@@ -52,3 +52,6 @@ postpro.m
 Finally, it is shown that Monte Carlo simulations validated the system’s performance and adaptability to stochastic uncertainties. Although wind dynamics were not considered, the GNC
 architecture exhibits promising trajectory tracking and robustness against disturbances, suggesting a solid foundation for further research into more advanced GNC techniques for future Martian
 missions.
+
+## GitHub Repository
+[gnc-reentry-simulator](https://github.com/david-bermejo/gnc-reentry-simulator)
