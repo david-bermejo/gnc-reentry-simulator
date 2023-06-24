@@ -4,6 +4,8 @@ simdb = loadInputData(simdb);
 
 %% Process every file inside inputs
 function out = loadInputData(simdb)
+    noiseFlag = 1;
+
     out = simdb;
     currdir = pwd;
     files = dir(fullfile(currdir, '**\*.m'));
@@ -26,7 +28,7 @@ function out = loadInputData(simdb)
         fields = unique(fields, 'stable');
     
         cd(files(i).folder);
-        out = setfield(out, fields{:}, eval(fcn_name + "()"));
+        out = setfield(out, fields{:}, eval(fcn_name + "(" + noiseFlag + ")"));
     end
     
     cd(currdir);

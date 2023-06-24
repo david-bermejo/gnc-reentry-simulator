@@ -18,17 +18,17 @@ params.Kq        = 1.9027e-7;       % [kW/m^2]
 params.R_max     = params.Rp+150e3; % [m]
 params.Qdot_max  = 500;             % [kW/m^2]
 params.q_max     = 10000;           % [Pa]
-params.n_max     = 2.5;               % [-]
-params.gamma_max = deg2rad(0);   % [rad]
+params.n_max     = 2.5;             % [-]
+params.gamma_max = deg2rad(0);      % [rad]
 
 params.d_chi0    = deg2rad(4);      % [rad]
-params.d_chif    = deg2rad(2.5);      % [rad]
+params.d_chif    = deg2rad(2.5);    % [rad]
 params.M0        = 40;              % [-]
 params.Mf        = 5;               % [-]
 params.sigma_max = deg2rad(135);    % [rad]
 params.sigma_dot = deg2rad(15);     % [rad/s]
 params.sigma_dmp = 1.0;             % [-]
-params.r         = 0.95;             % [-]
+params.r         = 0.95;            % [-]
 
 params.drag_clean = drag_clean_interpolant('linear');
 params.lift_clean = lift_clean_interpolant('linear');
@@ -39,11 +39,21 @@ params.lift_flap = lift_inc_body_flap_interpolant('linear');
 [params.T_interp, params.p_interp, params.rho_interp] = atmosphere_interpolant('linear');
 
 N = 1000;
-h = linspace(0, 120e3, N);
+h = linspace(0, 150e3, N);
 rho = params.rho_interp(h);
+T = params.T_interp(h);
 
 figure;
-semilogy(h/1000, rho, 'b');
+subplot(2,1,1);
+semilogx(rho, h/1000, 'b','LineWidth',1.5);
+xlabel('Density [kg/m^3]');
+ylabel('Height [km]')
+grid;
+subplot(2,1,2);
+plot(T, h/1000, 'b','LineWidth',1.5);
+xlabel('Temperature [K]');
+ylabel('Height [km]')
+grid;
 
 %% Initial conditions
 R0 = params.Rp + 120.0e3;           % [m]
@@ -72,7 +82,7 @@ options = optimoptions("surrogateopt",...
     'UseVectorized',true,...
     'MaxFunctionEvaluations',250000);
 
-if true
+if false
     [x, fval] = surrogateopt(@(x) objval(x, params), lb, ub, options);
     res = objval(x, params);
 
@@ -103,22 +113,51 @@ if true
     save('trajectory.mat', 'ts', 'energy', 'y', 'u',...
         'e0', 'ef', 'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
 else
-    load('trajectory-v9.mat', 'ts', 'energy', 'y', 'u',...
+    load('trajectory-v33.mat', 'ts', 'energy', 'y', 'u',...
         'R0', 'tau0', 'delta0', 'V0', 'gamma0', 'chi0');
     x = [V0, gamma0, tau0, delta0, chi0];
+
+    [~, ~, ~, bank] = objfun(x, params);
     res = objval(x, params);
 
     fprintf('\nObjective function value; %g\n', res.Fval);
     fprintf('Inequalities: [%f, %f, %f, %f]\n\n', res.Ineq);
 
-    fprintf("V0: %f m/s\n", x(1));
-    fprintf("gamma0: %f deg\n", rad2deg(x(2)));
+    fprintf("h0: %f km\n", (params.x0(1)-params.Rp)/1000);
     fprintf("tau0: %f deg\n", rad2deg(x(3)));
     fprintf("delta0: %f deg\n", rad2deg(x(4)));
-    fprintf("chi0: %f deg\n", rad2deg(x(5)));
+    fprintf("V0: %f m/s\n", x(1));
+    fprintf("gamma0: %f deg\n", rad2deg(x(2)));
+    fprintf("chi0: %f deg\n\n", rad2deg(x(5)));
+
+    fprintf("hf: %f km\n", (y(1,end)-params.Rp)/1000);
+    fprintf("tauf: %f deg\n", rad2deg(y(2,end)));
+    fprintf("deltaf: %f deg\n", rad2deg(y(3,end)));
+    fprintf("Vf: %f m/s\n", y(4,end));
+    fprintf("gammaf: %f deg\n", rad2deg(y(5,end)));
+    fprintf("chif: %f deg\n\n", rad2deg(y(6,end)));
 end
 
+T = params.T_interp(y(1,:) - params.Rp);
+M = y(4,:) ./ sqrt(params.gamma .* params.Rg .* T);
+AoA_cmd = AoA_curve(M);
+
 %% Plot results
+figure();
+subplot(2,1,1);
+plot(M, AoA_cmd, 'b','LineWidth',1.5);
+title('Angle of Attack profile');
+xlabel('M [-]');
+ylabel('\alpha [deg]');
+grid;
+subplot(2,1,2);
+plot(ts, rad2deg(bank), 'b','LineWidth',1.5);
+title('Bank angle profile');
+xlabel('t [s]');
+ylabel('\sigma [deg]');
+ylim([-150,150]);
+grid;
+
 figure();
 plot(ts, energy);
 title('Energy');
@@ -127,42 +166,42 @@ ylabel('Energy');
 grid;
 
 figure();
-plot(ts, rad2deg(u(1,:)));
+plot(ts, rad2deg(u(1,:)), 'b','LineWidth',1.5);
 title('Raw Control Law: u(t)');
 xlabel('t [s]');
 ylabel('Bank Angle [deg]');
 grid;
 
 figure();
-plot(ts, rad2deg(bank));
+plot(ts, rad2deg(bank), 'b','LineWidth',1.5);
 title('Control Law: u(t)');
 xlabel('t [s]');
 ylabel('Bank Angle [deg]');
 grid;
 
 figure();
-plot(ts, u(2,:));
+plot(ts, u(2,:), 'b','LineWidth',1.5);
 title('Body flap: \delta_b(t)');
 xlabel('t [s]');
 ylabel('Body flap [deg]');
 grid;
 
 figure;
-plot(ts, (y(1,:) - params.Rp) ./ 1000);
+plot(ts, (y(1,:) - params.Rp) ./ 1000, 'b','LineWidth',1.5);
 title('Reentry Envelope');
 xlabel('t [s]');
 ylabel('Height [km]');
 grid;
 
 figure;
-plot(ts, y(4,:) ./ 1000);
+plot(ts, y(4,:) ./ 1000, 'b','LineWidth',1.5);
 title('Velocity');
 xlabel('t [s]');
 ylabel('Velocity [km/s]');
 grid;
 
 figure;
-plot(y(4,:) ./ 1000, (y(1,:) - params.Rp) ./ 1000);
+plot(y(4,:) ./ 1000, (y(1,:) - params.Rp) ./ 1000, 'b','LineWidth',1.5);
 title('Flight Envelope');
 xlabel('Velocity [km/s]');
 ylabel('Height [km]');
@@ -170,13 +209,13 @@ grid;
 
 figure;
 subplot(2, 1, 1);
-plot(ts, rad2deg(y(2,:)));
+plot(ts, rad2deg(y(2,:)), 'b','LineWidth',1.5);
 title('Longitude');
 xlabel('t [s]');
 ylabel('\tau [deg]');
 grid;
 subplot(2, 1, 2);
-plot(ts, rad2deg(y(3,:)));
+plot(ts, rad2deg(y(3,:)), 'b','LineWidth',1.5);
 title('Latitude');
 xlabel('t [s]');
 ylabel('\delta [deg]');
@@ -184,16 +223,24 @@ grid;
 
 figure;
 subplot(2, 1, 1);
-plot(ts, rad2deg(y(5,:)));
+plot(ts, rad2deg(y(5,:)), 'b','LineWidth',1.5);
 title('Flight Path Angle');
 xlabel('t [s]');
 ylabel('\gamma [deg]');
 grid;
 subplot(2, 1, 2);
-plot(ts, rad2deg(y(6,:)));
+plot(ts, rad2deg(delta_heading(y, params)), 'b','LineWidth',1.5);
+title('Heading Angle Error');
+xlabel('t [s]');
+ylabel('\Delta\chi [deg]');
+ylim([-8, 8]);
+grid;
+
+figure;
+plot(ts, rad2deg(y(6,:)), 'b','LineWidth',1.5);
 hold on;
-plot(ts, rad2deg(delta_heading(y, params) + y(6,:)));
-plot(ts, rad2deg(delta_heading(y, params)));
+plot(ts, rad2deg(delta_heading(y, params) + y(6,:)), 'LineWidth',1.5);
+plot(ts, rad2deg(delta_heading(y, params)), 'LineWidth',1.5);
 hold off;
 title('Heading');
 xlabel('t [s]');
@@ -201,26 +248,26 @@ ylabel('\chi [deg]');
 legend('\chi', '\chi_t', '\Delta\chi');
 grid;
 
-figure;
-plot(ts, rad2deg(delta_heading(y, params)));
-title('Heading angle error \Delta\chi(t)');
-xlabel('t [s]');
-ylabel('\Delta\chi [deg]');
-grid;
-
+% Plot constraints
 constr = calc_constraints(ts, y, u, params);
 figure;
-plot(ts, constr(3,:));
+subplot(3,1,1);
+plot(ts, constr(3,:), 'b','LineWidth',1.5);
 title('Normal Acceleration');
 xlabel('t [s]');
-ylabel('n_{max} [-]');
+ylabel('n [-]');
 grid;
-
-figure;
-plot(ts, constr(1,:));
-title('Heat Flux profile');
+subplot(3,1,2);
+plot(ts, constr(1,:), 'b','LineWidth',1.5);
+title('Heat Rate');
 xlabel('t [s]');
-ylabel('q_{tot} [kW/m^2]');
+ylabel('q_t [kW/m^2]');
+grid;
+subplot(3,1,3);
+plot(ts, constr(2,:), 'b','LineWidth',1.5);
+title('Dynamic Pressure');
+xlabel('t [s]');
+ylabel('q_{\infty} [Pa]');
 grid;
 
 h = linspace(R0-params.Rp, Rf-params.Rp, 100);
@@ -244,7 +291,7 @@ inBetween = [h, fliplr(h)]/1000;
 figure;
 fill(x2, inBetween, 'y');
 hold on;
-plot(y(4,:)/1000, (y(1,:) - params.Rp)/1000, 'LineWidth', 1.5);
+%plot(y(4,:)/1000, (y(1,:) - params.Rp)/1000, 'b','LineWidth',1.5);
 plot(V1/1000, h/1000);
 plot(V2/1000, h/1000, '--');
 plot(V3/1000, h/1000, '--');
@@ -254,7 +301,7 @@ xlim([0, V0/1000*1.025]);
 title('Entry Corridor');
 xlabel('V [km/s]');
 ylabel('h [km]');
-name = legend('', 'Numerical Solution', 'Glide, $\alpha = 45^{\circ}$', ...
+name = legend('', 'Glide, $\alpha = 45^{\circ}$', ...
         "$\dot{Q}_{max} = " + params.Qdot_max + "\;kW/m^2$", ...
         "$n_{max} = " + params.n_max + "$, $\alpha = 45^{\circ}$", ...
         "$q_{max} = " + params.q_max + "\;Pa$");
@@ -276,7 +323,7 @@ xlabel('Longitude [deg]');
 ylabel('Latitude [deg]');
 xticks(-180:30:180);
 xtickformat('degrees');
-yticks(-90:15:90);
+yticks(-90:30:90);
 ytickformat('degrees');
 
 %% Equations

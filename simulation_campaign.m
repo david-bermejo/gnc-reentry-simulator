@@ -1,5 +1,5 @@
 N_workers = 6;
-N         = 20*N_workers;
+N         = 84*N_workers;
 M         = N/N_workers;
 T         = zeros(1,M);
 
@@ -45,5 +45,7 @@ for i=1:M
     T(i) = toc;
 
     T_hat = mean(T(1:i));
-    fprintf('Estimated remaining time: %f min\n\n', T_hat*(M-i)/60);
+    minutes = floor(T_hat*(M-i)/60);
+    seconds = floor(mod(T_hat*(M-i),60));
+    fprintf('Estimated remaining time: %d min %d sec\n\n', minutes, seconds);
 end

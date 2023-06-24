@@ -1,4 +1,4 @@
-function simdb_aero = aero()
+function simdb_aero = aero(noiseFlag)
     %% Aerodynamic coefficients database
     % Angle of attack table:
     simdb_aero.AoA_table = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45];          % [deg]

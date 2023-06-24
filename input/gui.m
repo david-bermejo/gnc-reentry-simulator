@@ -1,4 +1,4 @@
-function out = gui()
+function out = gui(noiseFlag)
     %% Time definitions
     % Execution frequency:
     out.freq = 20;            % [Hz]

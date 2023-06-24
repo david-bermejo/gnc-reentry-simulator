@@ -1,4 +1,4 @@
-function out = sc()
+function out = sc(noiseFlag)
     %% Constants
     % Standard gravity:
     out.g0      = 9.80665;  % [m/s^2]

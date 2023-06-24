@@ -1,4 +1,4 @@
-function out = rad()
+function out = rad(noiseFlag)
     %% Constants
     % Planet radius:
     Rp = 3396.2 * 1e3; % [m]

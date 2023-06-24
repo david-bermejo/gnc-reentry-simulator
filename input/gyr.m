@@ -1,4 +1,4 @@
-function out = gyr()
+function out = gyr(noiseFlag)
     %% Time definitions
     % Internal sample frequency:
     out.internal_freq       = 5000; % [Hz]

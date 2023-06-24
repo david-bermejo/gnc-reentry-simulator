@@ -1,4 +1,4 @@
-function [K, P] = lqra(A, B, Q, R)
+function [K, P] = lqr(A, B, Q, R)
     % Computes the feedback matrix for the continuous time, infinite-
     % horizon Linear Quadratic Regulator.
     %

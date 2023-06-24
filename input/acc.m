@@ -1,4 +1,4 @@
-function out = acc()
+function out = acc(noiseFlag)
     %% ACC time constants
     % Accelerometer sampling frequency [Hz]
     out.internal_freq       = 5000;

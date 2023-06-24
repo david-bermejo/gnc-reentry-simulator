@@ -1,4 +1,4 @@
-function out = nav()
+function out = nav(noiseFlag)
     %% Constants
     % Planet radius:
     Rp = 3396.2 * 1e3;          % [m]

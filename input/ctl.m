@@ -1,4 +1,4 @@
-function out = ctl()
+function out = ctl(noiseFlag)
     %% Time definitions
     % Execution frequency:
     out.freq = 20;          % [Hz]
